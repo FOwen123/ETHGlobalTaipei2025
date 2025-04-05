@@ -2,10 +2,8 @@
 
 pragma solidity ^0.8.28;
 
-import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 
 contract Betcha {
-    using Chainlink for Chainlink.Request;
 
     error Betcha__BetAmountMusbtBeGreaterThanZero();
     error Betcha__InvalidOpponent();
@@ -34,24 +32,10 @@ contract Betcha {
     uint256 private _nextBetId = 1;
     mapping(uint256 => Bet) public bets; // betId -> Bet
 
-    // Oracle stuff ??
-    address private oracleAddress;
-    bytes32 private jobId;
-    uint256 private fee;
-
-    // Strava API response tracking??
-    mapping(uint256 => uint256) public stravaPlayer1Distance;
-    mapping(uint256 => uint256) public stravaPlayer2Distance;
-
     event BetCreated(uint256 betId, address creator, uint256 amount);
     event BetAccepted(uint256 betId, address opponent);
     event NotificationSend(address to, string message);
     event BetResolved(uint256 betId, address winner);
-
-    constructor(address _oracle, bytes32 _jobId, uint256 _fee) {
-        jobId = _jobId;
-        fee = _fee;
-    }
 
     function createBet(
         address _opponent,
@@ -70,7 +54,7 @@ contract Betcha {
             creator: msg.sender,
             opponent: _opponent,
             betAmount: msg.value,
-            distanceGoal: _distanceGoal,
+            distanceGoal: _distanceGoal * 1000, // km -> m
             deadline: block.timestamp + (_deadline * 1 days),
             opponentDistance: 0,
             betDescription: _desc,
@@ -91,24 +75,6 @@ contract Betcha {
         bet.status = BetStatus.ACTIVE;
         emit BetAccepted(_betId, msg.sender);
     }
-
-    // function submitProof(
-    //     uint256 _betId,
-    //     uint256 _distance,
-    //     string memory _proofLink
-    // ) external {
-    //     require(msg.sender == oracleVerifier, "Only oracle");
-    //     Bet storage bet = bets[_betId];
-    //     require(bet.status == BetStatus.Active, "Bet not active");
-
-    //     bet.opponentDistance = _distance;
-    //     bet.proofLink = _proofLink;
-
-    //     // Auto-resolve if completed
-    //     if (_distance >= bet.distanceGoal) {
-    //         _resolveBet(_betId);
-    //     }
-    // }
 
     function resolveBet(uint256 _betId) private {
         Bet storage bet = bets[_betId];
