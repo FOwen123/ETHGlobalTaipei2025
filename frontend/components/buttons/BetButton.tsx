@@ -1,9 +1,10 @@
 'use client'
-import { useAccount, useWriteContract } from 'wagmi';
+import { useWriteContract, usePublicClient } from 'wagmi';
 import { useState } from "react";
 import { contractAbi } from '@/utils/contract';
 import { contractAddress } from '@/utils/contract';
-import { parseEther } from 'viem';
+import { parseEther, type Hash } from 'viem';
+
 
 export default function BetButton() {
     const [placingBet, setPlacingBet] = useState(false);
@@ -12,33 +13,79 @@ export default function BetButton() {
     const [distance, setDistance] = useState('')
     const [description, setDescription] = useState('')
     const [deadline, setDeadline] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
     
-    const { address } = useAccount()
     const { writeContract } = useWriteContract()
+    const publicClient = usePublicClient()
 
     const handleBet = async () => {
+        if (!publicClient) {
+            alert('Wallet not connected')
+            return
+        }
+
         try {
-            const deadlineDays = Math.ceil((new Date(deadline).getTime() - Date.now()) / (1000 * 3600 * 24));
+            setIsLoading(true)
             
-            const tx = await writeContract({
-                address: contractAddress,
-                abi: contractAbi,
-                functionName: 'createBet',
-                args: [
-                    friendAddress,
-                    Number(distance),
-                    deadlineDays,
-                    description
-                ],
-                value: parseEther(ethAmount),
+            // Validate and convert distance
+            const distanceNumber = Number(distance)
+            if (isNaN(distanceNumber) || distanceNumber <= 0) {
+                alert('Please enter a valid distance')
+                setIsLoading(false)
+                return
+            }
+            const distanceInt = Math.floor(distanceNumber)
+
+            // Use a fixed deadline of 7 days (in seconds)
+            const DAYS_IN_SECONDS = 86400;
+            const deadlineInSeconds = 7 * DAYS_IN_SECONDS;
+
+            console.log('Debug values before contract call:', {
+                distanceInt: typeof distanceInt + ': ' + distanceInt,
+                deadlineInSeconds: typeof deadlineInSeconds + ': ' + deadlineInSeconds,
+                friendAddress: typeof friendAddress + ': ' + friendAddress,
+                description: typeof description + ': ' + description,
+                ethAmount: typeof ethAmount + ': ' + ethAmount
             })
 
-            console.log('Transaction hash:', tx)
-            alert('Bet created successfully! Transaction hash: ' + tx)
-            setPlacingBet(false)
+            // Validate all values before BigInt conversion
+            if (!distanceInt || !friendAddress || !description || !ethAmount) {
+                alert('Missing required values')
+                setIsLoading(false)
+                return
+            }
+
+            const contractArgs = [
+                friendAddress as `0x${string}`,
+                BigInt(distanceInt),
+                BigInt(deadlineInSeconds),
+                description
+            ]
+
+            console.log('Contract args:', contractArgs)
+
+            try {
+                await writeContract({
+                    abi: contractAbi,
+                    address: contractAddress,
+                    functionName: 'createBet',
+                    args: contractArgs,
+                    value: parseEther(ethAmount)
+                })
+
+                if (!writeContract) {
+                    alert('Transaction failed')
+                }
+
+            } catch (error) {
+                console.error('Transaction failed:', error)
+                alert('Failed to create bet')
+            }
         } catch (error: any) {
             console.error('Error creating bet:', error)
-            alert('Error creating bet: ' + error.message)
+            alert('Error creating bet: ' + (error.message || 'Transaction failed'))
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -55,7 +102,7 @@ export default function BetButton() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     <div
                         className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-                        onClick={() => setPlacingBet(false)}
+                        onClick={() => !isLoading && setPlacingBet(false)}
                     />
 
                     <div className="relative z-50 w-full max-w-[400px] bg-[#1e1e1e] text-white rounded-lg border mx-4">
@@ -83,7 +130,7 @@ export default function BetButton() {
                                 placeholder="Ex: 0x1234567890123456789012345678901234567890"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
-                            <p className="flex items-start text-xs text-white mt-4 pl-1 pb-2">ETH amount to bet</p>
+                            <p className="flex items-start text-xs text-white mt-4 pl-1 pb-2">POL amount to bet</p>
                             <input
                                 type="text"
                                 value={ethAmount}
@@ -109,16 +156,19 @@ export default function BetButton() {
                             />
                             <p className="flex items-start text-xs text-white mt-4 pl-1 pb-2">Deadline</p>
                             <input
-                                type="datetime-local"
+                                type="date"
                                 value={deadline}
                                 onChange={(e) => setDeadline(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                             <button
                                 onClick={handleBet}
-                                className="mt-3 w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition duration-300"
+                                disabled={isLoading}
+                                className={`mt-3 w-full bg-blue-500 text-white font-bold py-2 px-4 rounded transition duration-300 ${
+                                    isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
+                                }`}
                             >
-                                Confirm Bet
+                                {isLoading ? 'Creating Bet...' : 'Confirm Bet'}
                             </button>
                         </div>
                     </div>
