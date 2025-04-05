@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.28;
 
-
 contract Betcha {
-
     error Betcha__BetAmountMusbtBeGreaterThanZero();
     error Betcha__InvalidOpponent();
     error Betcha__BetIsNotOpen();
     error Betcha__NotTheInvitedOpponent();
     error Betcha__IncorrectAmount();
     error Betcha__NotResolvableYet();
+    error Betcha__NotAuthorized();
+    error Betcha__BetNotActive();
 
     enum BetStatus {
         PENDING,
@@ -32,10 +32,17 @@ contract Betcha {
     uint256 private _nextBetId = 1;
     mapping(uint256 => Bet) public bets; // betId -> Bet
 
+    // Strava verifier address
+    address public stravaVerifier;
+
+    // Mapping from Strava athlete ID to wallet address
+    mapping(uint256 => address) public athleteWallets;
+
     event BetCreated(uint256 betId, address creator, uint256 amount);
     event BetAccepted(uint256 betId, address opponent);
     event NotificationSend(address to, string message);
     event BetResolved(uint256 betId, address winner);
+    event AthleteRegistered(uint256 athleteId, address wallet);
 
     function createBet(
         address _opponent,
@@ -74,6 +81,45 @@ contract Betcha {
 
         bet.status = BetStatus.ACTIVE;
         emit BetAccepted(_betId, msg.sender);
+    }
+
+    /**
+     * @notice Register a Strava athlete ID with a wallet address
+     * @param athleteId The Strava athlete ID
+     */
+    function registerAthlete(uint256 athleteId) external {
+        athleteWallets[athleteId] = msg.sender;
+        emit AthleteRegistered(athleteId, msg.sender);
+    }
+
+    /**
+     * @notice Set the Strava verifier contract address
+     * @param _stravaVerifier The address of the StravaVerifier contract
+     */
+    function setStravaVerifier(address _stravaVerifier) external {
+        // In production, add access control here (e.g., onlyOwner)
+        stravaVerifier = _stravaVerifier;
+    }
+
+    function verifyDistance(
+        uint256 _betId,
+        uint256 _athleteId,
+        uint256 _distance
+    ) external {
+        // Only the StravaVerifier contract can call this
+        require(msg.sender == stravaVerifier, Betcha__NotAuthorized());
+
+        Bet storage bet = bets[_betId];
+        require(bet.status == BetStatus.ACTIVE, Betcha__BetNotActive());
+
+        // Check if the athlete is the opponent in this bet
+        address athleteWallet = athleteWallets[_athleteId];
+        if (athleteWallet == bet.opponent) {
+            // Check if the bet can be resolved
+            if (bet.opponentDistance >= bet.distanceGoal) {
+                resolveBet(_betId);
+            }
+        }
     }
 
     function resolveBet(uint256 _betId) private {
