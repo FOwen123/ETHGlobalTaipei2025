@@ -72,7 +72,7 @@ export default function BetCard({ msg, betAmmount, expiredBy, name, address, bet
                 {/* Right Side */}
                 <div className="flex items-center gap-4">
                     <span className="text-purple-500 text-sm bg-[#161616] px-3 py-1 rounded-full">
-                        {betAmmount} ETH
+                        {betAmmount} POL
                     </span>
                     {status === 0 && !isCreator ? (
                         <button 
