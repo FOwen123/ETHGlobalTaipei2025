@@ -19,7 +19,7 @@ async function simulateWebhook() {
             object_id: ACTIVITY_ID,
             object_type: 'activity',
             owner_id: ATHLETE_ID,
-            subscription_id: 278244, // Your actual subscription ID from Strava
+            subscription_id: 278244, 
             updates: {}
         };
 

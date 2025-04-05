@@ -97,7 +97,6 @@ contract Betcha {
      * @param _stravaVerifier The address of the StravaVerifier contract
      */
     function setStravaVerifier(address _stravaVerifier) external {
-        // In production, add access control here (e.g., onlyOwner)
         stravaVerifier = _stravaVerifier;
     }
 

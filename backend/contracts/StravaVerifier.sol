@@ -55,16 +55,6 @@ contract StravaVerifier {
         emit OracleUpdated(oldOracle, newOracleAddress);
     }
     
-    /**
-     * @notice Verify a Strava activity and update a bet if applicable
-     * @param betId The bet ID to update
-     * @param athleteId The Strava athlete ID
-     * @param activityId The Strava activity ID
-     * @param distanceKm The distance in kilometers (multiplied by 100 for 2 decimal places)
-     * @param activityDate The activity date as a string
-     * @param activityHash A hash of the activity data
-     * @param signature The signature from the oracle
-     */
     function verifyActivityAndUpdateBet(
         uint256 betId,
         uint256 athleteId,
@@ -103,7 +93,7 @@ contract StravaVerifier {
         verifiedActivities[athleteId][activityId] = true;
         
         // Calculate actual distance in meters (contract expects meters)
-        uint256 distanceMeters = distanceKm * 100; // Convert from km*100 to meters
+        uint256 distanceMeters = distanceKm * 1000; // Convert from km*1000 to meters
         
         // Update the bet with the verified distance
         betchaContract.verifyDistance(betId, athleteId, distanceMeters);

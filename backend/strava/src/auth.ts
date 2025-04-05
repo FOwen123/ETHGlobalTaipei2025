@@ -21,6 +21,7 @@ export async function exchangeToken(req: Request, res: Response) {
     // Make sure we have the required env variables
     console.log("Client ID:", process.env.STRAVA_CLIENT_ID);
     console.log("Client Secret available:", !!process.env.STRAVA_CLIENT_SECRET);
+    
 
     try {
         // Try using URLSearchParams format instead of JSON
@@ -50,6 +51,7 @@ export async function exchangeToken(req: Request, res: Response) {
             refresh_token: data.refresh_token,
             expires_at: data.expires_at,
         });
+        console.log("Token response:", data);
 
         console.log("Token saved successfully");
         res.send("Token saved! You can close this window.");

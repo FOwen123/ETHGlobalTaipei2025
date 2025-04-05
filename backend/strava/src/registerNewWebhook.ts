@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Hardcoded values - use these instead of environment variables
-const CALLBACK_URL = 'https://9f8c-111-235-226-130.ngrok-free.app/strava-webhook';
+const CALLBACK_URL = 'https://6e4d-111-235-226-130.ngrok-free.app/strava-webhook';
 const VERIFY_TOKEN = 'super_secret';
 
 async function registerWebhook() {
