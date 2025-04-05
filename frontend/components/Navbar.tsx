@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
+
 export default function Navbar() {
     return (
         <div className="fixed top-0 left-0 w-full h-16">
