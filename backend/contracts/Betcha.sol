@@ -115,6 +115,7 @@ contract Betcha {
         // Check if the athlete is the opponent in this bet
         address athleteWallet = athleteWallets[_athleteId];
         if (athleteWallet == bet.opponent) {
+            bet.opponentDistance = _distance * 1000; // km -> m
             // Check if the bet can be resolved
             if (bet.opponentDistance >= bet.distanceGoal) {
                 resolveBet(_betId);
