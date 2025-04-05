@@ -11,7 +11,8 @@ export default function Navbar() {
                     <h1 className="text-3xl font-bold">Betcha</h1>
                 </div>
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard" className="hover:text-blue-600 cursor-pointer font-bold">Dashboard</Link>
+                    <a href="#dashboard" className="hover:text-blue-600 cursor-pointer font-bold">Dashboard</a>
+                    <a href="#home" className="hover:text-blue-600 cursor-pointer font-bold">Home</a>
                     <ConnectButton />
                 </div>
             </nav>
