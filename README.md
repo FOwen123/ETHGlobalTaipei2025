@@ -20,7 +20,7 @@
 
 | Layer         | Tech                                       |
 |---------------|--------------------------------------------|
-| Frontend      | TypeScript, React, Vite                    |
+| Frontend      | TypeScript, Next.js                        |
 | Backend       | Node.js, Express                           |
 | Blockchain    | Smart Contracts on **Polygon**             |
 | Fitness Data  | [Strava API + Webhooks]                    |
